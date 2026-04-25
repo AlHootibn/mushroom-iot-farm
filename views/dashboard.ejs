@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('partials/head', {title: 'Dashboard'}) %>
+<body>
+<%- include('partials/sidebar', {user, activePage}) %>
+<main class="main">
+
+  <header class="header">
+    <div>
+      <h1>Dashboard</h1>
+      <p class="subtitle">Welcome back, <strong><%= user.username %></strong> · <span id="clock"></span></p>
+    </div>
+    <div class="header-actions">
+      <div class="farm-health">
+        <span class="health-label">Farm Health</span>
+        <div class="health-bar"><div class="health-fill" id="health-fill" style="width:94%"></div></div>
+        <span class="health-value" id="health-value">94%</span>
+      </div>
+      <button class="btn-refresh" onclick="refreshSensors()">↻ Refresh</button>
+    </div>
+  </header>
+
+  <!-- Sensor Cards -->
+  <section class="section">
+    <h2 class="section-title">Live Sensors — All Rooms Average</h2>
+    <div class="cards-grid">
+      <div class="card sensor-card">
+        <div class="card-icon">🌡️</div>
+        <div class="card-info">
+          <div class="card-label">Temperature</div>
+          <div class="card-value"><span id="s-temp">—</span>°C</div>
+          <div class="card-range">Optimal: 18–24°C</div>
+        </div>
+        <div class="card-status" id="st-temp">●</div>
+      </div>
+      <div class="card sensor-card">
+        <div class="card-icon">💧</div>
+        <div class="card-info">
+          <div class="card-label">Humidity</div>
+          <div class="card-value"><span id="s-hum">—</span>%</div>
+          <div class="card-range">Optimal: 80–95%</div>
+        </div>
+        <div class="card-status" id="st-hum">●</div>
+      </div>
+      <div class="card sensor-card">
+        <div class="card-icon">💨</div>
+        <div class="card-info">
+          <div class="card-label">CO₂ Level</div>
+          <div class="card-value"><span id="s-co2">—</span> ppm</div>
+          <div class="card-range">Optimal: &lt;1000 ppm</div>
+        </div>
+        <div class="card-status" id="st-co2">●</div>
+      </div>
+      <div class="card sensor-card">
+        <div class="card-icon">💡</div>
+        <div class="card-info">
+          <div class="card-label">Light Level</div>
+          <div class="card-value"><span id="s-light">—</span> lux</div>
+          <div class="card-range">Optimal: 100–500 lux</div>
+        </div>
+        <div class="card-status" id="st-light">●</div>
+      </div>
+      <div class="card sensor-card">
+        <div class="card-icon">🌬️</div>
+        <div class="card-info">
+          <div class="card-label">Air Flow</div>
+          <div class="card-value"><span id="s-air">—</span> m/s</div>
+          <div class="card-range">Optimal: 1–3 m/s</div>
+        </div>
+        <div class="card-status" id="st-air">●</div>
+      </div>
+      <div class="card sensor-card">
+        <div class="card-icon">🌱</div>
+        <div class="card-info">
+          <div class="card-label">Substrate pH</div>
+          <div class="card-value"><span id="s-ph">—</span></div>
+          <div class="card-range">Optimal: 6.0–7.0</div>
+        </div>
+        <div class="card-status" id="st-ph">●</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Rooms -->
+  <section class="section">
+    <h2 class="section-title">Growing Rooms</h2>
+    <div class="rooms-grid">
+      <% rooms.forEach(function(room) {
+        const start = room.start_date ? new Date(room.start_date) : null;
+        const today = new Date();
+        const daysDone = start ? Math.floor((today - start) / 86400000) : 0;
+        const pct = room.total_days ? Math.min(100, Math.round(daysDone/room.total_days*100)) : 0;
+        const harvestDate = start ? new Date(start.getTime() + room.total_days*86400000) : null;
+      %>
+      <div class="room-card">
+        <div class="room-header">
+          <span class="room-name"><%= room.name %></span>
+          <span class="room-badge <%= room.status %>"><%= room.status %></span>
+        </div>
+        <% if (room.species) { %>
+          <div class="room-species"><em><%= room.species %></em></div>
+          <div class="room-progress-label">Progress <span>Day <%= daysDone %> / <%= room.total_days %></span></div>
+          <div class="progress-bar"><div class="progress-fill" style="width:<%= pct %>%"></div></div>
+          <div class="room-stats">
+            <span>🌡️ <span class="room-temp" data-room="<%= room.id %>">—</span></span>
+            <span>💧 <span class="room-hum" data-room="<%= room.id %>">—</span></span>
+            <span>💨 <span class="room-co2" data-room="<%= room.id %>">—</span></span>
+          </div>
+          <% if (harvestDate) { %>
+          <div class="room-harvest">Est. harvest: <%= harvestDate.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) %></div>
+          <% } %>
+        <% } else { %>
+          <div class="room-empty-msg">Ready for new batch</div>
+          <% if (user.role === 'admin' || user.role === 'manager') { %>
+          <a href="/rooms" class="btn-start">+ Start New Batch</a>
+          <% } %>
+        <% } %>
+      </div>
+      <% }); %>
+    </div>
+  </section>
+
+  <!-- Chart + Alerts -->
+  <section class="section two-col">
+    <div class="chart-box">
+      <h2 class="section-title">Temperature & Humidity (24h)</h2>
+      <canvas id="sensorChart" height="160"></canvas>
+    </div>
+    <div class="controls-box">
+      <h2 class="section-title">Recent Alerts</h2>
+      <% if (alerts.length === 0) { %>
+        <p style="color:var(--muted);padding:20px 0">No active alerts. All systems normal.</p>
+      <% } else { %>
+      <div class="alerts-list">
+        <% alerts.forEach(function(a) {
+          const icons = { danger:'🚨', warning:'⚠️', info:'ℹ️', success:'✅' };
+        %>
+        <div class="alert-item <%= a.type %>">
+          <span class="alert-icon"><%= icons[a.type] || 'ℹ️' %></span>
+          <div class="alert-body">
+            <strong><%= a.title %></strong>
+            <span><%= a.detail %></span>
+          </div>
+        </div>
+        <% }); %>
+      </div>
+      <% } %>
+      <a href="/alerts" class="btn-start" style="margin-top:16px;display:inline-block">View All Alerts</a>
+    </div>
+  </section>
+
+</main>
+
+<div id="toast" class="toast"></div>
+
+<script src="/app.js"></script>
+<script>
+  // Poll sensors every 4s
+  async function refreshSensors() {
+    try {
+      const data = await fetch('/api/sensors').then(r => r.json());
+      const ids = Object.keys(data);
+      const avg = (key) => (ids.reduce((s,id) => s + +data[id][key], 0) / ids.length);
+
+      const set = (id, val, min, max, unit='') => {
+        const el = document.getElementById(id);
+        const st = document.getElementById('st-' + id.replace('s-',''));
+        if (el) el.textContent = val;
+        if (st) {
+          const v = parseFloat(val);
+          st.textContent = '●';
+          st.className = 'card-status ' + (v >= min && v <= max ? 'good' : v >= min*.9 && v <= max*1.1 ? 'warning' : 'danger');
+        }
+      };
+
+      set('s-temp',  avg('temp').toFixed(1),  18, 24);
+      set('s-hum',   Math.round(avg('humidity')), 80, 95);
+      set('s-co2',   Math.round(avg('co2')),   400, 1000);
+      set('s-light', Math.round(avg('light')), 100, 500);
+      set('s-air',   avg('airflow').toFixed(1), 1, 3);
+      set('s-ph',    avg('ph').toFixed(1),      6, 7);
+
+      // Per-room inline
+      ids.forEach(id => {
+        const s = data[id];
+        const tempEl  = document.querySelector(`.room-temp[data-room="${id}"]`);
+        const humEl   = document.querySelector(`.room-hum[data-room="${id}"]`);
+        const co2El   = document.querySelector(`.room-co2[data-room="${id}"]`);
+        if (tempEl) tempEl.textContent = s.temp + '°C';
+        if (humEl)  humEl.textContent  = s.humidity + '%';
+        if (co2El)  co2El.textContent  = s.co2 + ' ppm';
+      });
+    } catch(e) {}
+  }
+
+  refreshSensors();
+  setInterval(refreshSensors, 4000);
+
+  // Clock
+  setInterval(() => {
+    document.getElementById('clock').textContent =
+      new Date().toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  }, 1000);
+
+  // Chart
+  const labels = [];
+  const tData = [], hData = [];
+  const now = new Date();
+  for (let i=23; i>=0; i--) {
+    const d = new Date(now - i*3600000);
+    labels.push(d.getHours()+':00');
+    tData.push(+(19 + Math.random()*5).toFixed(1));
+    hData.push(+(81 + Math.random()*12).toFixed(0));
+  }
+  new Chart(document.getElementById('sensorChart').getContext('2d'), {
+    type: 'line',
+    data: { labels, datasets: [
+      { label:'Temp (°C)', data:tData, borderColor:'#e74c3c', backgroundColor:'rgba(231,76,60,.08)', tension:.4, fill:true, pointRadius:0, borderWidth:2, yAxisID:'y1' },
+      { label:'Humidity (%)', data:hData, borderColor:'#3498db', backgroundColor:'rgba(52,152,219,.08)', tension:.4, fill:true, pointRadius:0, borderWidth:2, yAxisID:'y2' },
+    ]},
+    options: { responsive:true,
+      plugins:{ legend:{ labels:{ color:'#8892b0', boxWidth:12 } } },
+      scales: {
+        x:  { ticks:{color:'#8892b0',maxTicksLimit:8}, grid:{color:'#2e3250'} },
+        y1: { position:'left',  ticks:{color:'#e74c3c'}, grid:{color:'#2e3250'}, title:{display:true,text:'°C',color:'#e74c3c'} },
+        y2: { position:'right', ticks:{color:'#3498db'}, grid:{drawOnChartArea:false}, title:{display:true,text:'%',color:'#3498db'} },
+      }
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MycoFarm — Login</title>
+  <link rel="stylesheet" href="/style.css"/>
+</head>
+<body class="login-body">
+  <div class="login-card">
+    <div class="login-logo">
+      <span class="logo-icon" style="font-size:48px">🍄</span>
+      <h1>MycoFarm</h1>
+      <p>IoT Farm Management System</p>
+    </div>
+
+    <% if (error) { %>
+    <div class="login-error"><span>⚠</span> <%= error %></div>
+    <% } %>
+
+    <form method="POST" action="/login" class="login-form">
+      <div class="login-field">
+        <label>Username</label>
+        <input type="text" name="username" placeholder="Enter your username" autofocus required/>
+      </div>
+      <div class="login-field">
+        <label>Password</label>
+        <input type="password" name="password" placeholder="Enter your password" required/>
+      </div>
+      <button type="submit" class="login-btn">Sign In →</button>
+    </form>
+
+    <div class="login-footer">
+      Secure access · Contact admin to create an account
+    </div>
+  </div>
+</body>
+</html>

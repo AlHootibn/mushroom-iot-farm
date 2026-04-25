@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('partials/head', {title: 'Rooms'}) %>
+<body>
+<%- include('partials/sidebar', {user, activePage}) %>
+<main class="main">
+
+  <header class="header">
+    <div><h1>Growing Rooms</h1><p class="subtitle">Manage all grow chambers</p></div>
+    <% if (user.role === 'admin' || user.role === 'manager') { %>
+    <button class="btn-refresh" onclick="openNewBatch()">+ New Batch</button>
+    <% } %>
+  </header>
+
+  <section class="section">
+    <div class="rooms-detail-grid" id="rooms-grid">
+      <% rooms.forEach(function(room) {
+        const start = room.start_date ? new Date(room.start_date) : null;
+        const today = new Date();
+        const daysDone = start ? Math.floor((today - start) / 86400000) : 0;
+        const pct = room.total_days ? Math.min(100, Math.round(daysDone/room.total_days*100)) : 0;
+        const harvestDate = start ? new Date(start.getTime() + room.total_days*86400000) : null;
+      %>
+      <div class="room-detail-card" id="room-card-<%= room.id %>">
+        <div class="room-detail-header">
+          <div>
+            <h3><%= room.name %></h3>
+            <div class="room-species-name"><% if(room.species){%><em><%= room.species %></em><%}else{%>No species assigned<%}%></div>
+          </div>
+          <span class="room-badge <%= room.status %>"><%= room.status %></span>
+        </div>
+
+        <div class="room-image-placeholder" style="background:linear-gradient(135deg,#1a2a1a,#0e1e10)">
+          <span style="font-size:56px">🍄</span>
+          <% if (start) { %><div class="room-overlay-stats">Day <%= daysDone %> of <%= room.total_days %></div><% } %>
+        </div>
+
+        <% if (room.species) { %>
+        <div class="room-detail-sensors">
+          <div class="mini-sensor"><span class="ms-label">Temp</span><span class="ms-val room-sensor-temp" data-room="<%= room.id %>">—</span></div>
+          <div class="mini-sensor"><span class="ms-label">Humidity</span><span class="ms-val room-sensor-hum" data-room="<%= room.id %>">—</span></div>
+          <div class="mini-sensor"><span class="ms-label">CO₂</span><span class="ms-val room-sensor-co2" data-room="<%= room.id %>">—</span></div>
+          <div class="mini-sensor"><span class="ms-label">Light</span><span class="ms-val room-sensor-light" data-room="<%= room.id %>">—</span></div>
+        </div>
+        <div class="room-progress-label">Growth Progress <span><%= pct %>%</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:<%= pct %>%"></div></div>
+        <% } %>
+
+        <div class="room-detail-footer">
+          <% if (harvestDate) { %>
+          <span class="room-harvest">🗓 Est. <%= harvestDate.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) %></span>
+          <% } else { %>
+          <span class="room-harvest" style="color:var(--muted)">Idle</span>
+          <% } %>
+          <div class="room-actions">
+            <% if (user.role === 'admin' || user.role === 'manager') { %>
+            <button class="btn-sm" onclick="openEditRoom(<%= JSON.stringify(room) %>)">✏️ Edit</button>
+            <% } %>
+            <% if (user.role === 'admin') { %>
+            <button class="btn-sm btn-warn" onclick="deleteRoom(<%= room.id %>, '<%= room.name %>')">🗑 Delete</button>
+            <% } %>
+          </div>
+        </div>
+      </div>
+      <% }); %>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">Season Summary</h2>
+    <div class="cards-grid">
+      <div class="card"><div class="card-icon">📦</div><div class="card-info"><div class="card-label">Active Batches</div><div class="card-value"><%= rooms.filter(r=>r.status!=='idle').length %></div></div></div>
+      <div class="card"><div class="card-icon">🏠</div><div class="card-info"><div class="card-label">Total Rooms</div><div class="card-value"><%= rooms.length %></div></div></div>
+      <div class="card"><div class="card-icon">🏆</div><div class="card-info"><div class="card-label">Total Harvested</div><div class="card-value">142 kg</div><div class="card-range">This season</div></div></div>
+      <div class="card"><div class="card-icon">💰</div><div class="card-info"><div class="card-label">Est. Revenue</div><div class="card-value">$2,840</div><div class="card-range">Current batches</div></div></div>
+    </div>
+  </section>
+</main>
+
+<!-- New Batch Modal -->
+<div class="modal-overlay" id="modal-new" onclick="closeModal('modal-new',event)">
+  <div class="modal">
+    <h2>Start New Batch</h2>
+    <div class="form-group"><label>Room</label>
+      <select class="form-input" id="nb-room">
+        <% rooms.forEach(r => { %>
+        <option value="<%= r.id %>"><%= r.name %></option>
+        <% }) %>
+      </select>
+    </div>
+    <div class="form-group"><label>Species</label>
+      <select class="form-input" id="nb-species">
+        <option>Pleurotus ostreatus (Oyster)</option>
+        <option>Lentinula edodes (Shiitake)</option>
+        <option>Hericium erinaceus (Lion's Mane)</option>
+        <option>Pleurotus eryngii (King Oyster)</option>
+        <option>Ganoderma lucidum (Reishi)</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Start Date</label><input type="date" id="nb-date" class="form-input"/></div>
+    <div class="form-group"><label>Expected Days</label><input type="number" id="nb-days" class="form-input" value="21" min="1"/></div>
+    <div class="form-group"><label>Target Temp (°C)</label><input type="number" id="nb-temp" class="form-input" value="22"/></div>
+    <div class="form-group"><label>Target Humidity (%)</label><input type="number" id="nb-hum" class="form-input" value="85"/></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-new')">Cancel</button>
+      <button class="btn-start" onclick="startBatch()">🚀 Start Batch</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Room Modal -->
+<div class="modal-overlay" id="modal-edit" onclick="closeModal('modal-edit',event)">
+  <div class="modal">
+    <h2>Edit Room</h2>
+    <input type="hidden" id="edit-id"/>
+    <div class="form-group"><label>Status</label>
+      <select class="form-input" id="edit-status">
+        <option value="idle">Idle</option>
+        <option value="inoculation">Inoculation</option>
+        <option value="growing">Growing</option>
+        <option value="fruiting">Fruiting</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Target Temp (°C)</label><input type="number" id="edit-temp" class="form-input"/></div>
+    <div class="form-group"><label>Target Humidity (%)</label><input type="number" id="edit-hum" class="form-input"/></div>
+    <div class="form-group"><label>Notes</label><textarea id="edit-notes" class="form-input" rows="3"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-edit')">Cancel</button>
+      <button class="btn-start" onclick="saveRoom()">💾 Save</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+<script src="/app.js"></script>
+<script>
+  // Sensor polling
+  async function pollSensors() {
+    try {
+      const data = await fetch('/api/sensors').then(r => r.json());
+      for (const id in data) {
+        const s = data[id];
+        const q = attr => document.querySelectorAll(`[data-room="${id}"]`);
+        document.querySelectorAll(`.room-sensor-temp[data-room="${id}"]`).forEach(e => e.textContent = s.temp+'°C');
+        document.querySelectorAll(`.room-sensor-hum[data-room="${id}"]`).forEach(e => e.textContent = s.humidity+'%');
+        document.querySelectorAll(`.room-sensor-co2[data-room="${id}"]`).forEach(e => e.textContent = s.co2+' ppm');
+        document.querySelectorAll(`.room-sensor-light[data-room="${id}"]`).forEach(e => e.textContent = s.light+' lux');
+      }
+    } catch {}
+  }
+  pollSensors(); setInterval(pollSensors, 4000);
+
+  function openNewBatch() {
+    document.getElementById('nb-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('modal-new').classList.add('active');
+  }
+  function openEditRoom(room) {
+    document.getElementById('edit-id').value       = room.id;
+    document.getElementById('edit-status').value   = room.status;
+    document.getElementById('edit-temp').value     = room.target_temp;
+    document.getElementById('edit-hum').value      = room.target_humidity;
+    document.getElementById('edit-notes').value    = room.notes || '';
+    document.getElementById('modal-edit').classList.add('active');
+  }
+  function closeModal(id, e) {
+    if (!e || e.target === document.getElementById(id))
+      document.getElementById(id).classList.remove('active');
+  }
+  async function startBatch() {
+    const body = {
+      name: document.querySelector(`#nb-room option:checked`).text.split(' ')[0] + ' ' + document.querySelector(`#nb-room option:checked`).text.split(' ')[1],
+      species: document.getElementById('nb-species').value,
+      status: 'inoculation',
+      start_date: document.getElementById('nb-date').value,
+      total_days: +document.getElementById('nb-days').value,
+      target_temp: +document.getElementById('nb-temp').value,
+      target_humidity: +document.getElementById('nb-hum').value,
+    };
+    // Update room
+    const roomId = document.getElementById('nb-room').value;
+    const r = await fetch(`/api/rooms/${roomId}`, {
+      method:'PUT', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ status:'inoculation', target_temp: body.target_temp, target_humidity: body.target_humidity })
+    });
+    if (r.ok) { showToast('Batch started!'); setTimeout(() => location.reload(), 800); }
+    closeModal('modal-new');
+  }
+  async function saveRoom() {
+    const id = document.getElementById('edit-id').value;
+    const r = await fetch(`/api/rooms/${id}`, {
+      method:'PUT', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        status: document.getElementById('edit-status').value,
+        target_temp: +document.getElementById('edit-temp').value,
+        target_humidity: +document.getElementById('edit-hum').value,
+        notes: document.getElementById('edit-notes').value,
+      })
+    });
+    if (r.ok) { showToast('Room updated!'); setTimeout(() => location.reload(), 800); }
+    closeModal('modal-edit');
+  }
+  async function deleteRoom(id, name) {
+    if (!confirm(`Delete ${name}? This cannot be undone.`)) return;
+    const r = await fetch(`/api/rooms/${id}`, { method:'DELETE' });
+    if (r.ok) { showToast('Room deleted.'); document.getElementById(`room-card-${id}`).remove(); }
+    else showToast('Error deleting room.', true);
+  }
+</script>
+</body>
+</html>

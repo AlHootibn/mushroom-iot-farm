@@ -1,0 +1,145 @@
+{
+  "seq": {
+    "users": 3,
+    "rooms": 4,
+    "alerts": 5,
+    "log": 0
+  },
+  "users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "email": "admin@mycofarm.com",
+      "password": "$2a$10$UF5HHJgkDL9PW/SpNQPa9.T4xxhETs.mU2AAJdN68HJekQJ7du2Ke",
+      "role": "admin",
+      "created_at": "2026-04-25T18:28:07.158Z",
+      "last_login": null
+    },
+    {
+      "id": 2,
+      "username": "manager",
+      "email": "manager@mycofarm.com",
+      "password": "$2a$10$Nn5laDndyo1lYO6fXto0sOXLSNtX4dMVS1AD1EGN8n3ekYdEIPZfO",
+      "role": "manager",
+      "created_at": "2026-04-25T18:28:07.225Z",
+      "last_login": null
+    },
+    {
+      "id": 3,
+      "username": "viewer",
+      "email": "viewer@mycofarm.com",
+      "password": "$2a$10$sP84xlcFivnbbGM1JmVJu.flbWTnN1bcMrc/7/2MPNx5ekTxbmNbm",
+      "role": "viewer",
+      "created_at": "2026-04-25T18:28:07.313Z",
+      "last_login": null
+    }
+  ],
+  "rooms": [
+    {
+      "id": 1,
+      "name": "Room A",
+      "species": "Pleurotus ostreatus",
+      "status": "growing",
+      "start_date": "2026-04-13",
+      "total_days": 21,
+      "target_temp": 22,
+      "target_humidity": 88,
+      "notes": null,
+      "created_at": "2026-04-25T18:28:07.314Z"
+    },
+    {
+      "id": 2,
+      "name": "Room B",
+      "species": "Lentinula edodes",
+      "status": "fruiting",
+      "start_date": "2026-04-07",
+      "total_days": 25,
+      "target_temp": 19,
+      "target_humidity": 85,
+      "notes": null,
+      "created_at": "2026-04-25T18:28:07.314Z"
+    },
+    {
+      "id": 3,
+      "name": "Room C",
+      "species": "Hericium erinaceus",
+      "status": "inoculation",
+      "start_date": "2026-04-22",
+      "total_days": 28,
+      "target_temp": 23,
+      "target_humidity": 90,
+      "notes": null,
+      "created_at": "2026-04-25T18:28:07.314Z"
+    },
+    {
+      "id": 4,
+      "name": "Room D",
+      "species": null,
+      "status": "idle",
+      "start_date": null,
+      "total_days": 21,
+      "target_temp": 22,
+      "target_humidity": 85,
+      "notes": null,
+      "created_at": "2026-04-25T18:28:07.314Z"
+    }
+  ],
+  "alerts": [
+    {
+      "id": 1,
+      "type": "danger",
+      "title": "CO₂ spike in Room B",
+      "detail": "CO₂ reached 1,240 ppm — fan activated automatically.",
+      "room_id": 2,
+      "resolved": 0,
+      "created_at": "2026-04-25T18:28:07.314Z",
+      "resolved_at": null,
+      "resolved_by": null
+    },
+    {
+      "id": 2,
+      "type": "warning",
+      "title": "Humidity dropped in Room B",
+      "detail": "Humidity fell to 79%, below threshold. Misting triggered.",
+      "room_id": 2,
+      "resolved": 0,
+      "created_at": "2026-04-25T18:28:07.314Z",
+      "resolved_at": null,
+      "resolved_by": null
+    },
+    {
+      "id": 3,
+      "type": "warning",
+      "title": "Sensor battery low — TEMP-A03",
+      "detail": "Battery at 12%. Replace within 48 hours.",
+      "room_id": 1,
+      "resolved": 0,
+      "created_at": "2026-04-25T18:28:07.314Z",
+      "resolved_at": null,
+      "resolved_by": null
+    },
+    {
+      "id": 4,
+      "type": "info",
+      "title": "Room C inoculation started",
+      "detail": "Lion's Mane batch successfully inoculated.",
+      "room_id": 3,
+      "resolved": 0,
+      "created_at": "2026-04-25T18:28:07.314Z",
+      "resolved_at": null,
+      "resolved_by": null
+    },
+    {
+      "id": 5,
+      "type": "success",
+      "title": "Room A harvest approaching",
+      "detail": "Oyster mushrooms on track for May 4.",
+      "room_id": 1,
+      "resolved": 0,
+      "created_at": "2026-04-25T18:28:07.314Z",
+      "resolved_at": null,
+      "resolved_by": null
+    }
+  ],
+  "log": []
+}

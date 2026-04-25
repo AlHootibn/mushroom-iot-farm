@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('partials/head', {title: 'Controls'}) %>
+<body>
+<%- include('partials/sidebar', {user, activePage}) %>
+<main class="main">
+
+  <header class="header">
+    <div><h1>Controls</h1><p class="subtitle">Manage all actuators and automation schedules</p></div>
+    <div class="header-actions">
+      <div class="mode-toggle">
+        <button class="mode-btn active" id="btn-auto" onclick="setMode('auto')">🤖 Auto</button>
+        <button class="mode-btn" id="btn-manual" onclick="setMode('manual')">🖐 Manual</button>
+      </div>
+    </div>
+  </header>
+
+  <section class="section">
+    <h2 class="section-title">Master Controls</h2>
+    <div class="master-grid">
+      <% const devices = [
+        {id:'fan',   icon:'💨', name:'Ventilation System', sub:'All rooms'},
+        {id:'mist',  icon:'💧', name:'Misting System',     sub:'Ultrasonic humidifiers'},
+        {id:'heat',  icon:'🔥', name:'Heating System',     sub:'Radiant floor heaters'},
+        {id:'light', icon:'💡', name:'Grow Lights',        sub:'Full-spectrum LED'},
+        {id:'pump',  icon:'🚿', name:'Irrigation Pump',    sub:'Substrate watering'},
+        {id:'co2s',  icon:'🌬️', name:'CO₂ Scrubber',      sub:'Carbon filter + blower'},
+      ]; %>
+      <% devices.forEach(d => { %>
+      <div class="master-card">
+        <div class="master-icon"><%= d.icon %></div>
+        <div class="master-info">
+          <div class="master-name"><%= d.name %></div>
+          <div class="master-sub"><%= d.sub %></div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" <%= ['fan','mist','light','co2s'].includes(d.id) ? 'checked' : '' %>
+            onchange="toggleDevice('<%= d.id %>', this.checked, null)">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <% }) %>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">Per-Room Settings</h2>
+    <div class="rooms-detail-grid">
+      <% rooms.filter(r => r.status !== 'idle').forEach(room => { %>
+      <div class="control-room-card">
+        <div class="control-room-header">
+          <h3><%= room.name %> — <%= room.species ? room.species.split(' ')[0] : '' %></h3>
+          <span class="room-badge <%= room.status %>"><%= room.status %></span>
+        </div>
+        <div class="slider-row">
+          <label>Target Temp: <strong id="r<%= room.id %>-t"><%= room.target_temp %>°C</strong></label>
+          <input type="range" min="15" max="30" value="<%= room.target_temp %>"
+            oninput="document.getElementById('r<%= room.id %>-t').textContent=this.value+'°C'"/>
+        </div>
+        <div class="slider-row">
+          <label>Target Humidity: <strong id="r<%= room.id %>-h"><%= room.target_humidity %>%</strong></label>
+          <input type="range" min="50" max="99" value="<%= room.target_humidity %>"
+            oninput="document.getElementById('r<%= room.id %>-h').textContent=this.value+'%'"/>
+        </div>
+        <div class="slider-row">
+          <label>Fan Speed: <strong id="r<%= room.id %>-f">60%</strong></label>
+          <input type="range" min="0" max="100" value="60"
+            oninput="document.getElementById('r<%= room.id %>-f').textContent=this.value+'%'"/>
+        </div>
+        <div class="slider-row">
+          <label>Light Intensity: <strong id="r<%= room.id %>-l">70%</strong></label>
+          <input type="range" min="0" max="100" value="70"
+            oninput="document.getElementById('r<%= room.id %>-l').textContent=this.value+'%'"/>
+        </div>
+        <button class="btn-start" style="width:100%;margin-top:8px"
+          onclick="applyRoom(<%= room.id %>, '<%= room.name %>')">Apply Settings</button>
+      </div>
+      <% }) %>
+
+      <div class="control-room-card">
+        <div class="control-room-header"><h3>⏰ Automation Schedule</h3></div>
+        <div class="schedule-list">
+          <div class="schedule-item"><span>💡 Lights ON</span><span>06:00</span></div>
+          <div class="schedule-item"><span>💡 Lights OFF</span><span>22:00</span></div>
+          <div class="schedule-item"><span>🚿 Misting cycle</span><span>Every 4 hrs</span></div>
+          <div class="schedule-item"><span>💨 Fan burst</span><span>Every 2 hrs</span></div>
+          <div class="schedule-item"><span>📊 Sensor log</span><span>Every 15 min</span></div>
+        </div>
+        <button class="btn-start" style="width:100%;margin-top:8px" onclick="showToast('Schedule editor coming soon')">Edit Schedule</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+<div id="toast" class="toast"></div>
+<script src="/app.js"></script>
+<script>
+  function setMode(m) {
+    document.getElementById('btn-auto').classList.toggle('active', m==='auto');
+    document.getElementById('btn-manual').classList.toggle('active', m==='manual');
+    showToast(`Switched to ${m} mode`);
+  }
+  async function toggleDevice(device, state, room_id) {
+    await fetch('/api/controls', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ device, state: state ? 'ON' : 'OFF', room_id })
+    });
+    showToast(`${device.toUpperCase()} turned ${state ? 'ON' : 'OFF'}`);
+  }
+  async function applyRoom(id, name) {
+    await fetch('/api/controls', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ device:'room-settings', state:'updated', room_id: id })
+    });
+    showToast(`${name} settings applied`);
+  }
+</script>
+</body>
+</html>

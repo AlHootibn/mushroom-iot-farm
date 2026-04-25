@@ -1,0 +1,36 @@
+<aside class="sidebar">
+  <div class="logo">
+    <span class="logo-icon">🍄</span>
+    <span class="logo-text">MycoFarm</span>
+  </div>
+
+  <nav>
+    <a href="/"          class="nav-item <%= activePage==='dashboard'  ? 'active':'' %>">📊 Dashboard</a>
+    <a href="/rooms"     class="nav-item <%= activePage==='rooms'      ? 'active':'' %>">🏠 Rooms</a>
+    <a href="/analytics" class="nav-item <%= activePage==='analytics'  ? 'active':'' %>">📈 Analytics</a>
+    <% if (user.role === 'admin' || user.role === 'manager') { %>
+    <a href="/controls"  class="nav-item <%= activePage==='controls'   ? 'active':'' %>">⚙️ Controls</a>
+    <% } %>
+    <a href="/alerts"    class="nav-item <%= activePage==='alerts'     ? 'active':'' %>">🔔 Alerts
+      <% if (typeof alertCount !== 'undefined' && alertCount > 0) { %>
+        <span class="nav-badge"><%= alertCount %></span>
+      <% } %>
+    </a>
+    <a href="/logs"      class="nav-item <%= activePage==='logs'       ? 'active':'' %>">📋 Logs</a>
+    <% if (user.role === 'admin') { %>
+    <div class="nav-divider"></div>
+    <a href="/users"     class="nav-item <%= activePage==='users'      ? 'active':'' %>">👥 Users</a>
+    <% } %>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <a href="/profile" class="sidebar-user <%= activePage==='profile' ? 'active-user':'' %>">
+      <div class="user-avatar"><%= user.username.substring(0,2).toUpperCase() %></div>
+      <div class="user-meta">
+        <div class="user-name"><%= user.username %></div>
+        <div class="role-badge role-<%= user.role %>"><%= user.role %></div>
+      </div>
+    </a>
+    <a href="/logout" class="logout-btn" title="Logout">⏻</a>
+  </div>
+</aside>

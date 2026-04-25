@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('partials/head', {title: 'Profile'}) %>
+<body>
+<%- include('partials/sidebar', {user, activePage}) %>
+<main class="main">
+
+  <header class="header">
+    <div><h1>My Profile</h1><p class="subtitle">Account settings and activity</p></div>
+  </header>
+
+  <section class="section two-col">
+
+    <!-- Profile Info -->
+    <div class="chart-box" style="display:flex;flex-direction:column;gap:24px">
+      <div class="profile-hero">
+        <div class="profile-avatar"><%= profile.username.substring(0,2).toUpperCase() %></div>
+        <div>
+          <h2><%= profile.username %></h2>
+          <div style="margin-top:6px"><span class="role-badge role-<%= profile.role %>"><%= profile.role %></span></div>
+          <div style="color:var(--muted);font-size:13px;margin-top:6px"><%= profile.email %></div>
+          <div style="color:var(--muted);font-size:12px;margin-top:4px">
+            Member since <%= new Date(profile.created_at).toLocaleDateString('en-US',{month:'long',year:'numeric'}) %>
+          </div>
+          <% if (profile.last_login) { %>
+          <div style="color:var(--muted);font-size:12px;margin-top:2px">
+            Last login: <%= new Date(profile.last_login).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) %>
+          </div>
+          <% } %>
+        </div>
+      </div>
+
+      <div>
+        <h3 style="margin-bottom:14px;font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Change Password</h3>
+        <div class="form-group"><label>Current Password</label><input type="password" id="p-cur" class="form-input" placeholder="Enter current password"/></div>
+        <div class="form-group" style="margin-top:12px"><label>New Password</label><input type="password" id="p-new" class="form-input" placeholder="At least 6 characters"/></div>
+        <div class="form-group" style="margin-top:12px"><label>Confirm New Password</label><input type="password" id="p-conf" class="form-input" placeholder="Repeat new password"/></div>
+        <div id="pw-error" class="login-error" style="display:none;margin-top:12px"></div>
+        <button class="btn-start" style="width:100%;margin-top:16px" onclick="changePassword()">🔑 Update Password</button>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="controls-box">
+      <h2 class="section-title">Recent Activity</h2>
+      <% const actionIcons = {
+        LOGIN:'🔓', LOGOUT:'🔒', CONTROL:'⚙️', ROOM_CREATE:'🏠', ROOM_UPDATE:'✏️',
+        ROOM_DELETE:'🗑', ALERT_RESOLVE:'✅', USER_CREATE:'👤', USER_ROLE:'🔄',
+        USER_DELETE:'❌', PASSWORD_CHANGE:'🔑'
+      }; %>
+      <% if (activity.length === 0) { %>
+        <p style="color:var(--muted)">No activity recorded yet.</p>
+      <% } else { %>
+      <div class="activity-list">
+        <% activity.forEach(a => { %>
+        <div class="activity-item">
+          <span class="activity-icon"><%= actionIcons[a.action] || '📋' %></span>
+          <div class="activity-body">
+            <div class="activity-action"><%= a.action.replace(/_/g,' ') %></div>
+            <% if (a.detail) { %><div class="activity-detail"><%= a.detail %></div><% } %>
+          </div>
+          <span class="activity-time">
+            <%= new Date(a.created_at).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) %>
+          </span>
+        </div>
+        <% }) %>
+      </div>
+      <% } %>
+    </div>
+
+  </section>
+
+  <!-- Permissions Summary -->
+  <section class="section">
+    <h2 class="section-title">Your Permissions (<%= profile.role %>)</h2>
+    <div class="cards-grid">
+      <% const permsMap = {
+        admin:   ['View all pages','Control devices','Manage rooms','Resolve alerts','Manage users','Change roles'],
+        manager: ['View all pages','Control devices','Manage rooms','Resolve alerts'],
+        viewer:  ['View dashboard','View rooms','View analytics','View alerts','View logs'],
+      };
+      (permsMap[profile.role] || []).forEach(p => { %>
+      <div class="card" style="flex-direction:row;align-items:center;gap:12px">
+        <span style="font-size:20px">✅</span>
+        <span><%= p %></span>
+      </div>
+      <% }) %>
+    </div>
+  </section>
+
+</main>
+<div id="toast" class="toast"></div>
+<script src="/app.js"></script>
+<script>
+  async function changePassword() {
+    const errEl = document.getElementById('pw-error');
+    const cur  = document.getElementById('p-cur').value;
+    const nw   = document.getElementById('p-new').value;
+    const conf = document.getElementById('p-conf').value;
+    errEl.style.display = 'none';
+    if (nw !== conf) { errEl.textContent = 'New passwords do not match.'; errEl.style.display = 'flex'; return; }
+    const r = await fetch('/api/profile/password', {
+      method:'PUT', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ current: cur, newpass: nw })
+    });
+    const d = await r.json();
+    if (!r.ok) { errEl.textContent = d.error; errEl.style.display = 'flex'; }
+    else {
+      document.getElementById('p-cur').value = '';
+      document.getElementById('p-new').value = '';
+      document.getElementById('p-conf').value = '';
+      showToast('Password updated successfully!');
+    }
+  }
+</script>
+</body>
+</html>

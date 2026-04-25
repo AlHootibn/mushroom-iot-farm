@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('partials/head', {title: 'Access Denied'}) %>
+<body>
+<%- include('partials/sidebar', {user, activePage}) %>
+<main class="main">
+  <div class="error-page">
+    <div class="error-code">403</div>
+    <h2>Access Denied</h2>
+    <p><%= message %></p>
+    <a href="/" class="btn-start">← Back to Dashboard</a>
+  </div>
+</main>
+</body>
+</html>

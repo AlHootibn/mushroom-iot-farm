@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('partials/head', {title: 'Analytics'}) %>
+<body>
+<%- include('partials/sidebar', {user, activePage}) %>
+<main class="main">
+
+  <header class="header">
+    <div><h1>Analytics</h1><p class="subtitle">Yield, environment and performance trends</p></div>
+    <div class="header-actions">
+      <select class="form-input" id="range" style="width:auto;padding:8px 14px" onchange="buildCharts()">
+        <option value="7">Last 7 days</option>
+        <option value="30" selected>Last 30 days</option>
+        <option value="90">Last 90 days</option>
+      </select>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="cards-grid">
+      <div class="card"><div class="card-icon">🌾</div><div class="card-info"><div class="card-label">Total Yield</div><div class="card-value">142 kg</div><div class="card-range trend-up">↑ 18% vs last period</div></div></div>
+      <div class="card"><div class="card-icon">⚡</div><div class="card-info"><div class="card-label">Energy Used</div><div class="card-value">284 kWh</div><div class="card-range trend-down">↓ 7% vs last period</div></div></div>
+      <div class="card"><div class="card-icon">💧</div><div class="card-info"><div class="card-label">Water Used</div><div class="card-value">1,240 L</div><div class="card-range trend-up">↑ 3% vs last period</div></div></div>
+      <div class="card"><div class="card-icon">🎯</div><div class="card-info"><div class="card-label">Efficiency</div><div class="card-value">94%</div><div class="card-range trend-up">↑ 2% vs last period</div></div></div>
+    </div>
+  </section>
+
+  <section class="section two-col">
+    <div class="chart-box"><h2 class="section-title">Daily Yield (kg)</h2><canvas id="yieldChart" height="180"></canvas></div>
+    <div class="chart-box"><h2 class="section-title">Yield by Species</h2><canvas id="speciesChart" height="180"></canvas></div>
+  </section>
+
+  <section class="section two-col">
+    <div class="chart-box"><h2 class="section-title">Avg Temp by Room (°C)</h2><canvas id="tempChart" height="180"></canvas></div>
+    <div class="chart-box"><h2 class="section-title">Energy Consumption (kWh/day)</h2><canvas id="energyChart" height="180"></canvas></div>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">Harvest History</h2>
+    <div class="table-box">
+      <table class="data-table">
+        <thead><tr><th>Date</th><th>Room</th><th>Species</th><th>Yield (kg)</th><th>Duration</th><th>Status</th></tr></thead>
+        <tbody>
+          <% const history = [
+            {date:'Apr 18, 2026',room:'Room A',species:'Oyster',yield:'24.5',days:'21'},
+            {date:'Apr 10, 2026',room:'Room B',species:'King Oyster',yield:'18.2',days:'28'},
+            {date:'Mar 30, 2026',room:'Room C',species:'Shiitake',yield:'31.0',days:'25'},
+            {date:'Mar 22, 2026',room:'Room A',species:"Lion's Mane",yield:'16.8',days:'28'},
+            {date:'Mar 10, 2026',room:'Room B',species:'Oyster',yield:'27.3',days:'21'},
+            {date:'Feb 28, 2026',room:'Room D',species:'Reishi',yield:'24.2',days:'45'},
+          ]; %>
+          <% history.forEach(h => { %>
+          <tr>
+            <td><%= h.date %></td><td><%= h.room %></td><td><%= h.species %></td>
+            <td><strong><%= h.yield %></strong></td><td><%= h.days %> days</td>
+            <td><span class="room-badge growing">Harvested</span></td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+<script src="/app.js"></script>
+<script>
+  const opts = (extra={}) => ({
+    responsive:true,
+    plugins:{ legend:{ labels:{ color:'#8892b0', boxWidth:12 } } },
+    scales:{
+      x:{ ticks:{color:'#8892b0'}, grid:{color:'#2e3250'} },
+      y:{ ticks:{color:'#8892b0'}, grid:{color:'#2e3250'} },
+      ...extra
+    }
+  });
+  const rand = (n,a,b) => Array.from({length:n},()=>+(a+Math.random()*(b-a)).toFixed(1));
+  const dates = n => { const d=[],now=new Date(); for(let i=n-1;i>=0;i--){const t=new Date(now-i*86400000);d.push(`${t.getMonth()+1}/${t.getDate()}`);} return d; };
+
+  let charts = {};
+  function buildCharts() {
+    const n = +document.getElementById('range').value;
+    const lbl = dates(n);
+
+    if (charts.yield)   { charts.yield.destroy();   }
+    if (charts.species) { charts.species.destroy();  }
+    if (charts.temp)    { charts.temp.destroy();     }
+    if (charts.energy)  { charts.energy.destroy();   }
+
+    charts.yield = new Chart(document.getElementById('yieldChart').getContext('2d'),{
+      type:'bar', data:{ labels:lbl, datasets:[{ label:'kg', data:rand(n,0,8), backgroundColor:'rgba(124,92,191,.75)', borderRadius:4 }]},
+      options: opts()
+    });
+    charts.species = new Chart(document.getElementById('speciesChart').getContext('2d'),{
+      type:'doughnut',
+      data:{ labels:['Oyster','Shiitake',"Lion's Mane",'King Oyster','Reishi'],
+        datasets:[{ data:[45,31,17,18,24], backgroundColor:['#7c5cbf','#4ecdc4','#2ecc71','#f39c12','#e74c3c'], borderWidth:2, borderColor:'#1a1d27' }]},
+      options:{ responsive:true, plugins:{ legend:{ labels:{color:'#8892b0'} } } }
+    });
+    charts.temp = new Chart(document.getElementById('tempChart').getContext('2d'),{
+      type:'line', data:{ labels:lbl, datasets:[
+        {label:'Room A', data:rand(n,20,24), borderColor:'#4ecdc4', tension:.4, pointRadius:0},
+        {label:'Room B', data:rand(n,18,22), borderColor:'#f39c12', tension:.4, pointRadius:0},
+        {label:'Room C', data:rand(n,21,25), borderColor:'#7c5cbf', tension:.4, pointRadius:0},
+      ]}, options: opts()
+    });
+    charts.energy = new Chart(document.getElementById('energyChart').getContext('2d'),{
+      type:'line', data:{ labels:lbl, datasets:[{
+        label:'kWh', data:rand(n,8,14), borderColor:'#e74c3c',
+        backgroundColor:'rgba(231,76,60,.08)', fill:true, tension:.4, pointRadius:0
+      }]}, options: opts()
+    });
+  }
+  buildCharts();
+</script>
+</body>
+</html>
