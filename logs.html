@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MycoFarm — Logs</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="pages.css"/>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="logo"><span class="logo-icon">🍄</span><span class="logo-text">MycoFarm</span></div>
+    <nav>
+      <a href="index.html"     class="nav-item">📊 Dashboard</a>
+      <a href="rooms.html"     class="nav-item">🏠 Rooms</a>
+      <a href="analytics.html" class="nav-item">📈 Analytics</a>
+      <a href="controls.html"  class="nav-item">⚙️ Controls</a>
+      <a href="alerts.html"    class="nav-item">🔔 Alerts</a>
+      <a href="logs.html"      class="nav-item active">📋 Logs</a>
+    </nav>
+    <div class="sidebar-status"><div class="status-dot online"></div><span>System Online</span></div>
+  </aside>
+
+  <main class="main">
+    <header class="header">
+      <div><h1>System Logs</h1><p class="subtitle">Full audit trail of all sensor readings and events</p></div>
+      <div class="header-actions">
+        <select class="form-input" style="width:auto;padding:8px 14px" id="log-room">
+          <option value="all">All Rooms</option>
+          <option value="A">Room A</option>
+          <option value="B">Room B</option>
+          <option value="C">Room C</option>
+          <option value="D">Room D</option>
+        </select>
+        <select class="form-input" style="width:auto;padding:8px 14px" id="log-type">
+          <option value="all">All Types</option>
+          <option value="sensor">Sensor</option>
+          <option value="control">Control</option>
+          <option value="system">System</option>
+          <option value="alert">Alert</option>
+        </select>
+        <button class="btn-refresh" onclick="exportLogs()">⬇ Export CSV</button>
+      </div>
+    </header>
+
+    <!-- Log Stats -->
+    <section class="section">
+      <div class="cards-grid">
+        <div class="card"><div class="card-icon">📝</div><div class="card-info"><div class="card-label">Total Logs Today</div><div class="card-value">1,248</div><div class="card-range">Since midnight</div></div></div>
+        <div class="card"><div class="card-icon">🌡️</div><div class="card-info"><div class="card-label">Sensor Readings</div><div class="card-value">1,104</div><div class="card-range">Every 15 minutes</div></div></div>
+        <div class="card"><div class="card-icon">⚙️</div><div class="card-info"><div class="card-label">Control Events</div><div class="card-value">87</div><div class="card-range">Actuator changes</div></div></div>
+        <div class="card"><div class="card-icon">🔔</div><div class="card-info"><div class="card-label">Alert Events</div><div class="card-value">4</div><div class="card-range">Today</div></div></div>
+      </div>
+    </section>
+
+    <!-- Log Table -->
+    <section class="section">
+      <h2 class="section-title">Log Entries</h2>
+      <div class="table-box">
+        <table class="data-table" id="log-table">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Room</th>
+              <th>Type</th>
+              <th>Source</th>
+              <th>Value / Event</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="log-tbody"></tbody>
+        </table>
+      </div>
+      <div style="text-align:center;margin-top:16px">
+        <button class="btn-start" onclick="loadMore()">Load More</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    const logData = [
+      { time: '09:45:02', room:'A', type:'sensor',  source:'TEMP-A01',   value:'21.3°C',       status:'normal' },
+      { time: '09:45:01', room:'A', type:'sensor',  source:'HUM-A01',    value:'87%',           status:'normal' },
+      { time: '09:44:58', room:'B', type:'alert',   source:'CO2-B01',    value:'1,240 ppm',     status:'critical' },
+      { time: '09:44:30', room:'B', type:'control', source:'FAN-B01',    value:'Fan speed → 100%',status:'changed' },
+      { time: '09:44:00', room:'B', type:'sensor',  source:'CO2-B01',    value:'1,180 ppm',     status:'warning' },
+      { time: '09:30:00', room:'C', type:'sensor',  source:'TEMP-C01',   value:'23.1°C',        status:'normal' },
+      { time: '09:30:00', room:'C', type:'sensor',  source:'HUM-C01',    value:'90%',           status:'normal' },
+      { time: '09:15:00', room:'A', type:'sensor',  source:'TEMP-A01',   value:'21.0°C',        status:'normal' },
+      { time: '09:00:00', room:'B', type:'control', source:'MIST-B01',   value:'Misting cycle started', status:'changed' },
+      { time: '08:45:00', room:'B', type:'sensor',  source:'HUM-B01',    value:'79%',           status:'warning' },
+      { time: '08:30:00', room:'A', type:'sensor',  source:'CO2-A01',    value:'780 ppm',       status:'normal' },
+      { time: '08:15:00', room:'C', type:'sensor',  source:'LIGHT-C01',  value:'350 lux',       status:'normal' },
+      { time: '08:00:00', room:'all',type:'system', source:'Scheduler',  value:'Lights ON (all rooms)', status:'normal' },
+      { time: '07:45:00', room:'A', type:'sensor',  source:'PH-A01',     value:'6.5 pH',        status:'normal' },
+      { time: '07:30:00', room:'B', type:'sensor',  source:'TEMP-B01',   value:'19.2°C',        status:'normal' },
+      { time: '07:00:00', room:'all',type:'system', source:'AutoSystem', value:'Morning health check passed', status:'normal' },
+      { time: '06:00:00', room:'all',type:'control',source:'Scheduler',  value:'Daily fan burst started', status:'changed' },
+      { time: '04:00:00', room:'C', type:'sensor',  source:'TEMP-C01',   value:'25.6°C',        status:'warning' },
+      { time: '02:00:00', room:'A', type:'sensor',  source:'HUM-A01',    value:'91%',            status:'normal' },
+      { time: '00:00:00', room:'all',type:'system', source:'System',     value:'Daily log rotated', status:'normal' },
+    ];
+
+    const statusColors = {
+      normal: 'var(--green)', warning: 'var(--yellow)',
+      critical: 'var(--red)', changed: 'var(--blue)'
+    };
+    const typeIcons = { sensor:'🌡️', control:'⚙️', system:'💻', alert:'🔔' };
+
+    let shown = 10;
+    function renderLogs() {
+      const tbody = document.getElementById('log-tbody');
+      tbody.innerHTML = '';
+      logData.slice(0, shown).forEach(log => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="font-family:monospace;color:var(--muted)">Apr 25, 2026 ${log.time}</td>
+          <td>${log.room === 'all' ? 'All' : 'Room ' + log.room}</td>
+          <td>${typeIcons[log.type] || ''} ${log.type}</td>
+          <td><code style="background:var(--surface2);padding:2px 6px;border-radius:4px;font-size:12px">${log.source}</code></td>
+          <td>${log.value}</td>
+          <td><span style="color:${statusColors[log.status] || 'var(--muted)'}">● ${log.status}</span></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function loadMore() {
+      shown = Math.min(shown + 10, logData.length);
+      renderLogs();
+    }
+
+    function exportLogs() {
+      const csv = ['Timestamp,Room,Type,Source,Value,Status',
+        ...logData.map(l => `"Apr 25 2026 ${l.time}","${l.room}","${l.type}","${l.source}","${l.value}","${l.status}"`)
+      ].join('\n');
+      const a = document.createElement('a');
+      a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+      a.download = 'mycofarm-logs.csv';
+      a.click();
+    }
+
+    renderLogs();
+  </script>
+</body>
+</html>

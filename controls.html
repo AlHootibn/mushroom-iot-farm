@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MycoFarm — Controls</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="pages.css"/>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="logo"><span class="logo-icon">🍄</span><span class="logo-text">MycoFarm</span></div>
+    <nav>
+      <a href="index.html"     class="nav-item">📊 Dashboard</a>
+      <a href="rooms.html"     class="nav-item">🏠 Rooms</a>
+      <a href="analytics.html" class="nav-item">📈 Analytics</a>
+      <a href="controls.html"  class="nav-item active">⚙️ Controls</a>
+      <a href="alerts.html"    class="nav-item">🔔 Alerts</a>
+      <a href="logs.html"      class="nav-item">📋 Logs</a>
+    </nav>
+    <div class="sidebar-status"><div class="status-dot online"></div><span>System Online</span></div>
+  </aside>
+
+  <main class="main">
+    <header class="header">
+      <div><h1>Controls</h1><p class="subtitle">Manage all actuators and automation schedules</p></div>
+      <div class="header-actions">
+        <div class="mode-toggle">
+          <button class="mode-btn active" id="btn-auto" onclick="setMode('auto')">🤖 Auto</button>
+          <button class="mode-btn" id="btn-manual" onclick="setMode('manual')">🖐 Manual</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Master Controls -->
+    <section class="section">
+      <h2 class="section-title">Master Controls</h2>
+      <div class="master-grid">
+
+        <div class="master-card">
+          <div class="master-icon">💨</div>
+          <div class="master-info"><div class="master-name">Ventilation System</div><div class="master-sub">4 fans across all rooms</div></div>
+          <label class="toggle"><input type="checkbox" checked id="m-fan"><span class="slider"></span></label>
+        </div>
+
+        <div class="master-card">
+          <div class="master-icon">💧</div>
+          <div class="master-info"><div class="master-name">Misting System</div><div class="master-sub">Ultrasonic humidifiers</div></div>
+          <label class="toggle"><input type="checkbox" checked id="m-mist"><span class="slider"></span></label>
+        </div>
+
+        <div class="master-card">
+          <div class="master-icon">🔥</div>
+          <div class="master-info"><div class="master-name">Heating System</div><div class="master-sub">Radiant floor heaters</div></div>
+          <label class="toggle"><input type="checkbox" id="m-heat"><span class="slider"></span></label>
+        </div>
+
+        <div class="master-card">
+          <div class="master-icon">💡</div>
+          <div class="master-info"><div class="master-name">Grow Lights</div><div class="master-sub">Full-spectrum LED panels</div></div>
+          <label class="toggle"><input type="checkbox" checked id="m-light"><span class="slider"></span></label>
+        </div>
+
+        <div class="master-card">
+          <div class="master-icon">🚿</div>
+          <div class="master-info"><div class="master-name">Irrigation Pump</div><div class="master-sub">Substrate watering</div></div>
+          <label class="toggle"><input type="checkbox" id="m-pump"><span class="slider"></span></label>
+        </div>
+
+        <div class="master-card">
+          <div class="master-icon">🌬️</div>
+          <div class="master-info"><div class="master-name">CO₂ Scrubber</div><div class="master-sub">Carbon filter + blower</div></div>
+          <label class="toggle"><input type="checkbox" checked id="m-co2"><span class="slider"></span></label>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Per-Room Controls -->
+    <section class="section">
+      <h2 class="section-title">Per-Room Settings</h2>
+      <div class="rooms-detail-grid">
+
+        <div class="control-room-card">
+          <div class="control-room-header"><h3>Room A — Oyster</h3><span class="room-badge growing">Active</span></div>
+          <div class="slider-row">
+            <label>Target Temp: <strong id="rA-temp-label">22°C</strong></label>
+            <input type="range" min="15" max="30" value="22" oninput="document.getElementById('rA-temp-label').textContent=this.value+'°C'"/>
+          </div>
+          <div class="slider-row">
+            <label>Target Humidity: <strong id="rA-hum-label">88%</strong></label>
+            <input type="range" min="50" max="99" value="88" oninput="document.getElementById('rA-hum-label').textContent=this.value+'%'"/>
+          </div>
+          <div class="slider-row">
+            <label>Fan Speed: <strong id="rA-fan-label">60%</strong></label>
+            <input type="range" min="0" max="100" value="60" oninput="document.getElementById('rA-fan-label').textContent=this.value+'%'"/>
+          </div>
+          <div class="slider-row">
+            <label>Light Intensity: <strong id="rA-light-label">70%</strong></label>
+            <input type="range" min="0" max="100" value="70" oninput="document.getElementById('rA-light-label').textContent=this.value+'%'"/>
+          </div>
+          <button class="btn-start" style="width:100%;margin-top:8px">Apply Settings</button>
+        </div>
+
+        <div class="control-room-card">
+          <div class="control-room-header"><h3>Room B — Shiitake</h3><span class="room-badge fruiting">Active</span></div>
+          <div class="slider-row">
+            <label>Target Temp: <strong id="rB-temp-label">19°C</strong></label>
+            <input type="range" min="15" max="30" value="19" oninput="document.getElementById('rB-temp-label').textContent=this.value+'°C'"/>
+          </div>
+          <div class="slider-row">
+            <label>Target Humidity: <strong id="rB-hum-label">85%</strong></label>
+            <input type="range" min="50" max="99" value="85" oninput="document.getElementById('rB-hum-label').textContent=this.value+'%'"/>
+          </div>
+          <div class="slider-row">
+            <label>Fan Speed: <strong id="rB-fan-label">50%</strong></label>
+            <input type="range" min="0" max="100" value="50" oninput="document.getElementById('rB-fan-label').textContent=this.value+'%'"/>
+          </div>
+          <div class="slider-row">
+            <label>Light Intensity: <strong id="rB-light-label">60%</strong></label>
+            <input type="range" min="0" max="100" value="60" oninput="document.getElementById('rB-light-label').textContent=this.value+'%'"/>
+          </div>
+          <button class="btn-start" style="width:100%;margin-top:8px">Apply Settings</button>
+        </div>
+
+        <div class="control-room-card">
+          <div class="control-room-header"><h3>Room C — Lion's Mane</h3><span class="room-badge inoculation">Active</span></div>
+          <div class="slider-row">
+            <label>Target Temp: <strong id="rC-temp-label">23°C</strong></label>
+            <input type="range" min="15" max="30" value="23" oninput="document.getElementById('rC-temp-label').textContent=this.value+'°C'"/>
+          </div>
+          <div class="slider-row">
+            <label>Target Humidity: <strong id="rC-hum-label">90%</strong></label>
+            <input type="range" min="50" max="99" value="90" oninput="document.getElementById('rC-hum-label').textContent=this.value+'%'"/>
+          </div>
+          <div class="slider-row">
+            <label>Fan Speed: <strong id="rC-fan-label">40%</strong></label>
+            <input type="range" min="0" max="100" value="40" oninput="document.getElementById('rC-fan-label').textContent=this.value+'%'"/>
+          </div>
+          <div class="slider-row">
+            <label>Light Intensity: <strong id="rC-light-label">80%</strong></label>
+            <input type="range" min="0" max="100" value="80" oninput="document.getElementById('rC-light-label').textContent=this.value+'%'"/>
+          </div>
+          <button class="btn-start" style="width:100%;margin-top:8px">Apply Settings</button>
+        </div>
+
+        <!-- Schedule Card -->
+        <div class="control-room-card">
+          <div class="control-room-header"><h3>⏰ Automation Schedule</h3></div>
+          <div class="schedule-list">
+            <div class="schedule-item"><span>💡 Lights ON</span><span>06:00</span></div>
+            <div class="schedule-item"><span>💡 Lights OFF</span><span>22:00</span></div>
+            <div class="schedule-item"><span>🚿 Misting cycle</span><span>Every 4 hrs</span></div>
+            <div class="schedule-item"><span>💨 Fan burst</span><span>Every 2 hrs</span></div>
+            <div class="schedule-item"><span>📊 Sensor log</span><span>Every 15 min</span></div>
+          </div>
+          <button class="btn-start" style="width:100%;margin-top:8px">Edit Schedule</button>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    function setMode(mode) {
+      document.getElementById('btn-auto').classList.toggle('active', mode === 'auto');
+      document.getElementById('btn-manual').classList.toggle('active', mode === 'manual');
+    }
+  </script>
+</body>
+</html>
